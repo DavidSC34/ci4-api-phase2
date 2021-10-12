@@ -4,6 +4,7 @@ namespace App\Controllers\Api;
 
 use CodeIgniter\RESTful\ResourceController;
 use App\Models\CategoryModel;
+use App\Models\BlogModel;
 
 class ApiController extends ResourceController
 {
@@ -70,6 +71,62 @@ class ApiController extends ResourceController
     //POST
     public function createBlog()
     {
+        //validation
+      $rules =[
+          'category_id'=>'required',
+          'title'=>'required'
+
+      ];
+      if(!$this->validate($rules)){ 
+            //error
+            $response = [
+                'status'=>500,
+                'message'=>$this->validator->getErrors(),
+                'error'=>true,
+                'data'=> []    
+            ];
+      }else{
+            //no error
+            //asegurar que la categoria existe
+            $category_obj = new CategoryModel();
+            $is_exists =   $category_obj->find($this->request->getVar('category_id'));
+            if(!empty($is_exists)){
+                    //existe la categoria
+                    $blog_obj = new BlogModel();
+                    $data = [
+                        'category_id'=>$this->request->getVar('category_id'),
+                        'title'=>$this->request->getVar('title'),
+                        'content'=>$this->request->getVar('content')
+                    ];
+                    if($blog_obj->insert($data)){
+                            //blog created
+                            $response = [
+                                'status'=>200,
+                                'message'=>'Blog has been created',
+                                'error'=>false,
+                                'data'=> []    
+                            ];
+                    }else{
+                        //failde to create blog
+                        $response = [
+                            'status'=>500,
+                            'message'=>'Failed to created blog',
+                            'error'=>true,
+                            'data'=> []    
+                        ];
+                    }
+            }else{
+                // no existe la categoria
+                $response = [
+                    'status'=>404,
+                    'message'=>'Category not found',
+                    'error'=>true,
+                    'data'=> []    
+                ];
+            }
+      }
+      return $this->respondCreated($response);
+
     }
 
     //GET
