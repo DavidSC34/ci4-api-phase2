@@ -26,6 +26,16 @@ class BasicauthFilter implements FilterInterface
     public function before(RequestInterface $request, $arguments = null)
     {
         //
+        $username = isset($_SERVER['PHP_AUTH_USER']) ? $_SERVER['PHP_AUTH_USER'] : '';
+        $password = isset($_SERVER['PHP_AUTH_PW']) ? $_SERVER['PHP_AUTH_PW'] : '';
+
+        if ($username !== 'davidsc23' && $password !== 'jossul31') {
+            echo json_encode(array(
+                'status' => false,
+                'message' => 'Access denied'
+            ));
+            exit;
+        }
     }
 
     /**

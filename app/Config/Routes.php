@@ -33,7 +33,7 @@ $routes->setAutoRoute(true);
 // route since we don't have to scan directories.
 $routes->get('/', 'Home::index');
 
-$routes->group('api', ['namespace' => 'App\Controllers\Api'], function ($routes) {
+$routes->group('api', ['namespace' => 'App\Controllers\Api', 'filter' => 'basicauth'], function ($routes) {
     $routes->post('create-category', 'Apicontroller::createCategory');
     $routes->get('list-category', 'Apicontroller::listCategory');
     //Blog
