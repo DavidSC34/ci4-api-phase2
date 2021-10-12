@@ -8,6 +8,10 @@ use App\Models\BlogModel;
 
 class ApiController extends ResourceController
 {
+        private $db;
+    function __construct(){
+        $this->db = db_connect();
+    }
     //POST
     public function createCategory()
     {
@@ -132,10 +136,47 @@ class ApiController extends ResourceController
     //GET
     public function listBlogs()
     {
+        $builder = $this->db->table('blogs');
+        $builder->select('blogs.*, categories.name as category_name ');
+        $builder->join('categories','categories.id = blogs.category_id');
+        $data = $builder->get()->getResult();
+        $response =[
+        'status' => 200,
+        'message'=>'List blogs',
+        'error'=>false,
+        'data'=>$data
+        ];
+
+        return $this->respondCreated($response);
     }
+
     //GET
     public function singleBlogDetail($blog_id)
     {
+        $builder = $this->db->table('blogs as b');
+        $builder->select('b.*, c.name as category_name ');
+        $builder->join('categories as c','c.id = b.category_id');
+        $builder->where('b.id',$blog_id);
+        $data = $builder->get()->getRow();
+
+        if(!empty($data)){
+            $response =[
+                'status' => 200,
+                'message'=>'Single Blog detail',
+                'error'=>false,
+                'data'=>$data
+                ];
+        }else{
+            $response =[
+                'status' => 404,
+                'message'=>'Single Blog not found',
+                'error'=>true,
+                'data'=>[]
+                ];
+        }
+        
+    
+            return $this->respondCreated($response);
     }
     //POSt --> PUT
     public function updateBlog($blog_id)
