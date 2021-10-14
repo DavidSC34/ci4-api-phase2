@@ -8,8 +8,9 @@ use App\Models\BlogModel;
 
 class ApiController extends ResourceController
 {
-        private $db;
-    function __construct(){
+    private $db;
+    function __construct()
+    {
         $this->db = db_connect();
     }
     //POST
@@ -63,10 +64,10 @@ class ApiController extends ResourceController
     {
         $category_obj =  new CategoryModel();
         $response = [
-            'status'=>200,
-            'message'=>"List of categories",
-            'error'=>false,
-            'data'=> $category_obj->findAll()
+            'status' => 200,
+            'message' => "List of categories",
+            'error' => false,
+            'data' => $category_obj->findAll()
 
         ];
 
@@ -76,61 +77,60 @@ class ApiController extends ResourceController
     public function createBlog()
     {
         //validation
-      $rules =[
-          'category_id'=>'required',
-          'title'=>'required'
+        $rules = [
+            'category_id' => 'required',
+            'title' => 'required'
 
-      ];
-      if(!$this->validate($rules)){ 
+        ];
+        if (!$this->validate($rules)) {
             //error
             $response = [
-                'status'=>500,
-                'message'=>$this->validator->getErrors(),
-                'error'=>true,
-                'data'=> []    
+                'status' => 500,
+                'message' => $this->validator->getErrors(),
+                'error' => true,
+                'data' => []
             ];
-      }else{
+        } else {
             //no error
             //asegurar que la categoria existe
             $category_obj = new CategoryModel();
             $is_exists =   $category_obj->find($this->request->getVar('category_id'));
-            if(!empty($is_exists)){
-                    //existe la categoria
-                    $blog_obj = new BlogModel();
-                    $data = [
-                        'category_id'=>$this->request->getVar('category_id'),
-                        'title'=>$this->request->getVar('title'),
-                        'content'=>$this->request->getVar('content')
+            if (!empty($is_exists)) {
+                //existe la categoria
+                $blog_obj = new BlogModel();
+                $data = [
+                    'category_id' => $this->request->getVar('category_id'),
+                    'title' => $this->request->getVar('title'),
+                    'content' => $this->request->getVar('content')
+                ];
+                if ($blog_obj->insert($data)) {
+                    //blog created
+                    $response = [
+                        'status' => 200,
+                        'message' => 'Blog has been created',
+                        'error' => false,
+                        'data' => []
                     ];
-                    if($blog_obj->insert($data)){
-                            //blog created
-                            $response = [
-                                'status'=>200,
-                                'message'=>'Blog has been created',
-                                'error'=>false,
-                                'data'=> []    
-                            ];
-                    }else{
-                        //failde to create blog
-                        $response = [
-                            'status'=>500,
-                            'message'=>'Failed to created blog',
-                            'error'=>true,
-                            'data'=> []    
-                        ];
-                    }
-            }else{
+                } else {
+                    //failde to create blog
+                    $response = [
+                        'status' => 500,
+                        'message' => 'Failed to created blog',
+                        'error' => true,
+                        'data' => []
+                    ];
+                }
+            } else {
                 // no existe la categoria
                 $response = [
-                    'status'=>404,
-                    'message'=>'Category not found',
-                    'error'=>true,
-                    'data'=> []    
+                    'status' => 404,
+                    'message' => 'Category not found',
+                    'error' => true,
+                    'data' => []
                 ];
             }
-      }
-      return $this->respondCreated($response);
-
+        }
+        return $this->respondCreated($response);
     }
 
     //GET
@@ -138,13 +138,13 @@ class ApiController extends ResourceController
     {
         $builder = $this->db->table('blogs');
         $builder->select('blogs.*, categories.name as category_name ');
-        $builder->join('categories','categories.id = blogs.category_id');
+        $builder->join('categories', 'categories.id = blogs.category_id');
         $data = $builder->get()->getResult();
-        $response =[
-        'status' => 200,
-        'message'=>'List blogs',
-        'error'=>false,
-        'data'=>$data
+        $response = [
+            'status' => 200,
+            'message' => 'List blogs',
+            'error' => false,
+            'data' => $data
         ];
 
         return $this->respondCreated($response);
@@ -155,32 +155,90 @@ class ApiController extends ResourceController
     {
         $builder = $this->db->table('blogs as b');
         $builder->select('b.*, c.name as category_name ');
-        $builder->join('categories as c','c.id = b.category_id');
-        $builder->where('b.id',$blog_id);
+        $builder->join('categories as c', 'c.id = b.category_id');
+        $builder->where('b.id', $blog_id);
         $data = $builder->get()->getRow();
 
-        if(!empty($data)){
-            $response =[
+        if (!empty($data)) {
+            $response = [
                 'status' => 200,
-                'message'=>'Single Blog detail',
-                'error'=>false,
-                'data'=>$data
-                ];
-        }else{
-            $response =[
+                'message' => 'Single Blog detail',
+                'error' => false,
+                'data' => $data
+            ];
+        } else {
+            $response = [
                 'status' => 404,
-                'message'=>'Single Blog not found',
-                'error'=>true,
-                'data'=>[]
-                ];
+                'message' => 'Single Blog not found',
+                'error' => true,
+                'data' => []
+            ];
         }
-        
-    
-            return $this->respondCreated($response);
+
+
+        return $this->respondCreated($response);
     }
     //POSt --> PUT
     public function updateBlog($blog_id)
     {
+        //checar si exist el blog
+        $blog_obj = new BlogModel();
+        $blog_exists = $blog_obj->find($blog_id);
+
+        if (!empty($blog_exists)) {
+            //Blog exists
+            $rules = [
+                'category_id' => 'required',
+                'title' => 'required'
+            ];
+
+            if (!$this->validate($rules)) {
+                //erros
+                $response = [
+                    'status' => 500,
+                    'message' => $this->validator->getErrors(),
+                    'error' => true,
+                    'data' => []
+                ];
+            } else {
+                //no error
+                //check cateory exists
+                $cat_obj = new CategoryModel();
+                $cat_exists = $cat_obj->find($this->request->getVar('category_id'));
+                if (!empty($cat_exists)) {
+                    //category exits
+                    $data = [
+                        'category_id' => $this->request->getVar('category_id'),
+                        'title' => $this->request->getVar('title'),
+                        'content' => $this->request->getVar('content'),
+                    ];
+                    $blog_obj->update($blog_id, $data);
+                    $response = [
+                        'status' => 200,
+                        'message' => 'Blog update succesfully',
+                        'error' => false,
+                        'data' => []
+                    ];
+                } else {
+                    //category does not exists
+                    $response = [
+                        'status' => 404,
+                        'message' => 'Category not found',
+                        'error' => true,
+                        'data' => []
+                    ];
+                }
+            }
+        } else {
+            //Blog does no exits
+            $response = [
+                'status' => 404,
+                'message' => 'Blog not found',
+                'error' => true,
+                'data' => []
+            ];
+        }
+        return $this->respondCreated($response);
     }
     //DELETe
     public function deleteBlog($blog_id)

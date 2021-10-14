@@ -29,7 +29,8 @@ class BasicauthFilter implements FilterInterface
         $username = isset($_SERVER['PHP_AUTH_USER']) ? $_SERVER['PHP_AUTH_USER'] : '';
         $password = isset($_SERVER['PHP_AUTH_PW']) ? $_SERVER['PHP_AUTH_PW'] : '';
 
-        if ($username !== 'davidsc23' || $password !== 'jossul31') {
+
+        if ($username != 'davidsc23' || $password != 'jossul31') {
             //Convertir la salida en json
             header('Content-type:application/json');
             echo json_encode(array(
